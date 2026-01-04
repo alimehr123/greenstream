@@ -1,5 +1,9 @@
 # backend_services/capabilities/play_video.py
 
+# 🚨 TEST VIOLATION: DECISION importing EXECUTION (should fail)
+
+from backend_services.execution.video_executor import VideoExecutor
+
 from typing import Dict, Any
 from backend_services.intents.play_video_intent import PlayVideoIntent
 
