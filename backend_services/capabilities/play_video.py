@@ -2,7 +2,7 @@
 
 # 🚨 TEST VIOLATION: DECISION importing EXECUTION (should fail)
 
-from backend_services.execution.video_executor import VideoExecutor
+from backend_services.capabilities.search_videos import execute
 
 from typing import Dict, Any
 from backend_services.intents.play_video_intent import PlayVideoIntent
