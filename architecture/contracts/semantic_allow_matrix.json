@@ -1,0 +1,65 @@
+{
+  "version": "1.0",
+  "name": "Backend Semantic Allow Matrix",
+  "status": "LOCKED",
+  "description": "Semantic, role-based import rules for backend architecture. Enforces decision boundaries and contract purity.",
+  "governing_contracts": [
+    "Layout_Contract_.docx",
+    "Backend_Contract.docx",
+    "Backend_rulebook.docx"
+  ],
+  "core_principle": "A layer may import another layer only if it consumes its responsibility, never its decisions.",
+  "roles": {
+    "contracts": "CONTRACT",
+    "intents": "CONTRACT",
+    "layout_policy": "CONTRACT",
+
+    "policies": "DECISION",
+    "decision_engines": "DECISION",
+    "capabilities": "DECISION",
+
+    "capability_dispatcher": "DISPATCH",
+
+    "state_aggregation": "AGGREGATION",
+
+    "finalization": "EXECUTION",
+    "integrations": "EXECUTION",
+    "layout_services": "EXECUTION"
+  },
+  "allow_matrix": {
+    "CONTRACT": [
+      "CONTRACT"
+    ],
+    "DECISION": [
+      "CONTRACT",
+      "DECISION"
+    ],
+    "DISPATCH": [
+      "CONTRACT",
+      "DECISION",
+      "EXECUTION",
+      "AGGREGATION"
+    ],
+    "AGGREGATION": [
+      "CONTRACT",
+      "AGGREGATION"
+    ],
+    "EXECUTION": [
+      "CONTRACT",
+      "EXECUTION"
+    ]
+  },
+  "invariants": [
+    "Contracts must be pure and dependency-free",
+    "Decision layers must never depend on Aggregation or Execution layers",
+    "Aggregation layers must remain decision-blind",
+    "Execution layers must not influence decision or state composition"
+  ],
+  "notes": {
+    "contract_layers": "CONTRACT layers define semantic interfaces only and must not carry business logic or runtime behavior.",
+    "decision_layers": "DECISION layers own all business decisions and may only consume contracts or peer decision helpers.",
+    "aggregation_layers": "AGGREGATION layers only combine or normalize results from executed decisions and must never evaluate rules.",
+    "dispatch_layers": "DISPATCH layers orchestrate flow across layers but do not own decisions.",
+    "execution_layers": "EXECUTION layers perform side effects and runtime work without decision authority."
+  }
+}

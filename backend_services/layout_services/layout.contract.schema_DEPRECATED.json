@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "identity",
+    "policy",
+    "navigation",
+    "state",
+    "pages",
+    "components",
+    "actions",
+    "interactions"
+  ],
+  "additionalProperties": false,
+
+  "properties": {
+    "identity": {
+      "type": "object",
+      "required": ["name", "version", "schema_version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "version": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "checksum": {
+          "type": "string"
+        }
+      }
+    },
+
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source", "key", "operator", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "source": {
+                "enum": ["context"]
+              },
+              "key": {
+                "type": "string"
+              },
+              "operator": {
+                "enum": ["eq", "neq", "in", "not_in"]
+              },
+              "value": {}
+            }
+          }
+        }
+      }
+    },
+
+    "navigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "initial_page": {
+          "type": "string"
+        }
+      }
+    },
+
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-zA-Z0-9_.-]+$": {
+          "$ref": "#/$defs/state_definition"
+        }
+      }
+    },
+
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "components"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "enum": ["text", "input", "button", "list", "image"]
+            },
+            "bind": {
+              "type": "object"
+            },
+            "events": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "actions": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "required": ["intent", "target"],
+          "additionalProperties": false,
+          "properties": {
+            "intent": {
+              "type": "string"
+            },
+            "target": {
+              "enum": ["state", "navigation", "external"]
+            },
+            "params": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+
+    "interactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["trigger", "action"],
+        "additionalProperties": false,
+        "properties": {
+          "trigger": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "state_definition": {
+      "type": "object",
+      "required": ["owner", "type", "lifecycle"],
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "enum": ["layout", "page", "component"]
+        },
+        "page": {
+          "type": "string"
+        },
+        "component": {
+          "type": "string"
+        },
+        "type": {
+          "enum": ["string", "number", "boolean", "object", "array"]
+        },
+        "readonly": {
+          "type": "boolean",
+          "default": false
+        },
+        "initial": {},
+        "nullable": {
+          "type": "boolean",
+          "default": false
+        },
+        "lifecycle": {
+          "type": "object",
+          "required": ["create", "destroy"],
+          "additionalProperties": false,
+          "properties": {
+            "create": {
+              "enum": ["layout_init", "page_enter"]
+            },
+            "destroy": {
+              "enum": ["layout_exit", "page_exit"]
+            }
+          }
+        },
+        "mutable_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "owner": { "const": "page" } }
+          },
+          "then": {
+            "required": ["page"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "owner": { "const": "component" } }
+          },
+          "then": {
+            "required": ["component"]
+          }
+        }
+      ]
+    }
+  }
+}

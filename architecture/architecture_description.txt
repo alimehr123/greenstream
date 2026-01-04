@@ -1,0 +1,129 @@
+Root-Level Files
+build_desktop_offline.bat
+Purpose:
+
+Builds GreenStreamDesktop.exe completely offline using PyInstaller.
+Uses packages/ as the offline dependency source.
+Creates output in release/.
+Cleans temporary build artifacts inside build_workspace/.
+run_server.bat
+Purpose:
+
+Automatically activates the venv and runs FastAPI server on 0.0.0.0:8000.
+Ensures ui_web build folder exists.
+Used when the server must run as a LAN service.
+shared_config.py
+Purpose:
+
+Centralized configuration for all clients (desktop, mobile, web).
+Determines server base URL using priority:(1) SERVER_URL environment variable(2) LAN IP reachability(3) Internet fallback (Dynamic DNS domain)
+Prevents hardcoding duplicate server URLs in multiple UI modules.
+a core runtime component for all UIs.
+It detects: Env Var → Config JSON → Localhost → LAN Auto-Discovery → DDNS fallback.
+• Desktop executable (GreenStreamDesktop.exe) is fully portable and runs without installation.
+• For Win7 support, build_desktop_offline.bat must run under Python 3.9.13 on a Win7 machine.
+• Server must be running on Lenovo machine for LAN discovery to locate API (via broadcast scanning).
+• All builds are 100% offline using packages/ folder.
+
+Read_me_for_build_desktop_offline.txt
+Purpose:
+
+Developer guide for offline EXE building procedure.
+venv/
+Purpose:
+
+Python virtual environment used for development and running server/UI builds.
+packages/
+Purpose:
+
+Contains all wheel/tar.gz files for completely offline dependency installationincluding PyInstaller, Kivy, and Requests.
+release/
+Purpose:
+
+Final build outputs.
+GreenStreamDesktop.exe is created here.
+In the future GreenStreamSetup.exe (Inno Setup installer) will also be stored here.
+build_workspace/
+Purpose:
+
+Temporary folder for PyInstaller operations.
+May contain build/, dist/, logs, temporary specs.
+Automatically cleaned/reset on each build.
+server/ Directory
+main.py
+Purpose:
+
+Main FastAPI application entry point.
+Handles:
+API routing
+CORS
+Static file serving
+SPA fallback routing (index.html)
+LAN/IP-based hosting
+run_server.bat
+Purpose:
+
+Auto-start script for launching the FastAPI backend server.
+requirements.txt
+Purpose:
+
+Lists backend dependencies:
+fastapi
+uvicorn
+routers/
+Purpose:
+
+Reserved for organizing API endpoints into separate modular Python files.
+Example future files: auth.py, sensors.py, database.py
+ui_web/
+Purpose:
+
+Contains the production build of the Web UI which FastAPI serves directly.
+index.html is read by FastAPI for SPA fallback logic.
+frontend/ Directory
+ui_desktop_app/
+Purpose:
+
+Kivy-based desktop UI.
+Files:
+
+desktop_app.py → main application logic
+requirements.txt → dependencies
+assets/ → icons and images used by UI
+app_icon.ico
+greenStream.png
+*.kv files (none yet but may be added)
+ui_mobile_app/
+Purpose:
+
+Mobile UI (Kivy / KivyMD)
+Files:
+
+main.py → mobile client entry point
+requirements.txt → empty for now; future mobile libraries go here
+assets/ → images/icons, including greenStream.png
+ui_web/
+Purpose:
+
+Source of the Web UI used earlier for browser-based API tests.
+Files:
+
+index.html → test-reactive page that communicates with FastAPI
+Other optional JS/CSS files
+packages/ Directory
+Purpose:
+
+Contains offline dependency archives.
+Required for systems without internet.
+Used by build_desktop_offline.bat for offline installation.
+release/ Directory
+Purpose:
+
+Contains final application deliverables.
+GreenStreamDesktop.exe will be found here.
+Later: Windows installer (GreenStreamSetup.exe) created by Inno Setup.
+build_workspace/ Directory
+Purpose:
+
+Temporary workspace for PyInstaller.
+Safe to delete any time; recreated automatically.

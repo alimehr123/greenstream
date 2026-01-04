@@ -1,0 +1,112 @@
+{
+  "layout_name": "single_page_search_results_test",
+  "version": 3,
+  "meta": {
+    "author": "AliMehr",
+    "description": "Single page strong test: search and results in one page (layout-driven UI)"
+  },
+  "pages": [
+    {
+      "page_id": "search_results_page",
+      "title": "🔧 Single Page Search + Results (STRONG TEST)",
+      "layout_type": "grid",
+      "meta": {
+        "seo": {
+          "title": "Single Page Search + Results",
+          "description": "Search input and results rendered in the same layout-driven page",
+          "keywords": "search,results,single-page,layout-driven"
+        },
+        "auth": {
+          "required": false,
+          "roles": ""
+        },
+        "layout": {
+          "type": "public",
+          "max_width": "1200px",
+          "padding": "24px"
+        },
+        "analytics": {
+          "page_name": "single_page_search_results",
+          "track": false
+        },
+        "flags": {
+          "experimental": true,
+          "hidden": false
+        }
+      },
+      "components": [
+        {
+          "component_id": "debug_banner",
+          "component_type": "text",
+          "text": "⚠️ DEBUG MODE: Search + Results are rendered on the SAME page",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "page_id_display",
+          "component_type": "text",
+          "text": "Current Page ID: search_results_page",
+          "slot": "header",
+          "action": []
+        },
+
+        {
+          "component_id": "search_title",
+          "component_type": "text",
+          "text": "🔎 Enter your search keyword below:",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "search_input",
+          "component_type": "input",
+          "text": "Type keyword here…",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "search_button",
+          "component_type": "button",
+          "text": "SEARCH (Stay on same page)",
+          "slot": "header",
+          "actions": {
+            "on_click": {
+              "type": "fetch",
+              "url": "/api/search",
+              "method": "POST",
+              "payload": {
+                "query": "{{search_input}}"
+              },
+              "bind": {
+                "target": "results_list"
+              }
+            }
+          }
+        },
+
+        {
+          "component_id": "results_separator",
+          "component_type": "text",
+          "text": "────────── RESULTS ──────────",
+          "slot": "content",
+          "action": []
+        },
+        {
+          "component_id": "results_list",
+          "component_type": "list",
+          "slot": "content",
+          "empty_text": "No results yet. Try searching something 🔍",
+          "action": []
+        },
+
+        {
+          "component_id": "footer_debug",
+          "component_type": "text",
+          "text": "✅ If results appear below without navigation, frontend is truly layout-driven",
+          "slot": "footer",
+          "action": []
+        }
+      ]
+    }
+  ]
+}

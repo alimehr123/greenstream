@@ -1,0 +1,150 @@
+{
+  "layout_name": "two_pages_strong_test",
+  "version": 2,
+  "meta": {
+    "author": "AliMehr",
+    "description": "Strong test layout to verify fully layout-driven frontend"
+  },
+  "pages": [
+    {
+      "page_id": "search_page",
+      "title": "🔧 Two Page Layout – STRONG TEST",
+      "layout_type": "grid",
+      "meta": {
+        "seo": {
+          "title": "Two Page Layout – Debug Search",
+          "description": "Strong test page to verify layout-driven UI rendering",
+          "keywords": "layout,test,debug,two-page"
+        },
+        "auth": {
+          "required": false,
+          "roles": ""
+        },
+        "layout": {
+          "type": "public",
+          "max_width": "1100px",
+          "padding": "24px"
+        },
+        "analytics": {
+          "page_name": "search_page_strong_test",
+          "track": false
+        },
+        "flags": {
+          "experimental": true,
+          "hidden": false
+        }
+      },
+      "components": [
+        {
+          "component_id": "debug_notice",
+          "component_type": "text",
+          "text": "⚠️ DEBUG MODE: This is the TWO‑PAGE STRONG TEST layout",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "page_id_display",
+          "component_type": "text",
+          "text": "Current Page ID: search_page",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "search_title",
+          "component_type": "text",
+          "text": "👉 Enter a keyword below and press SEARCH (Two‑Page Mode)",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "search_input",
+          "component_type": "input",
+          "text": "Type search keyword here...",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "search_button",
+          "component_type": "button",
+          "text": "🔍 SEARCH (Go to Page 2)",
+          "slot": "header",
+          "actions": {
+            "on_click": {
+              "type": "fetch",
+              "url": "/api/search",
+              "method": "POST",
+              "payload": {
+                "query": "{{search_input}}"
+              }
+            }
+          }
+        },
+        {
+          "component_id": "footer_hint",
+          "component_type": "text",
+          "text": "✅ If you are seeing this text, the frontend is rendering purely from layout.json",
+          "slot": "footer",
+          "action": []
+        }
+      ]
+    },
+    {
+      "page_id": "results_page",
+      "title": "📄 Results Page – STRONG TEST",
+      "layout_type": "grid",
+      "meta": {
+        "seo": {
+          "title": "Results – Two Page Debug Layout",
+          "description": "Second page of strong layout test showing search results",
+          "keywords": "results,debug,layout,test"
+        },
+        "auth": {
+          "required": false,
+          "roles": ""
+        },
+        "layout": {
+          "type": "public",
+          "max_width": "1100px",
+          "padding": "24px"
+        },
+        "analytics": {
+          "page_name": "results_page_strong_test",
+          "track": false
+        },
+        "flags": {
+          "experimental": true,
+          "hidden": false
+        }
+      },
+      "components": [
+        {
+          "component_id": "results_debug_title",
+          "component_type": "text",
+          "text": "✅ RESULTS PAGE (TWO‑PAGE STRONG TEST)",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "results_page_id",
+          "component_type": "text",
+          "text": "Current Page ID: results_page",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "results_list",
+          "component_type": "list",
+          "slot": "content",
+          "action": []
+        },
+        {
+          "component_id": "results_footer_info",
+          "component_type": "text",
+          "text": "🔁 If this page renders correctly after SEARCH, navigation + layout contract is ✅",
+          "slot": "footer",
+          "action": []
+        }
+      ]
+    }
+  ]
+}

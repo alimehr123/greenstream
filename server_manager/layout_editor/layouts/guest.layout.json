@@ -1,0 +1,131 @@
+{
+  "layout_name": "two_pages_generic_view",
+  "version": 1,
+  "meta": {
+    "author": "AliMehr",
+    "description": "Generic two pages layout including search+results and video page"
+  },
+  "pages": [
+    {
+      "page_id": "search_results_page",
+      "title": "Search & Results",
+      "layout_type": "grid",
+      "meta": {
+        "seo": {
+          "title": "Search Videos",
+          "description": "Search and view video results",
+          "keywords": "search,results,video,youtube"
+        },
+        "auth": {
+          "required": false,
+          "roles": ""
+        },
+        "layout": {
+          "type": "public",
+          "max_width": "1200px",
+          "padding": "16px"
+        },
+        "analytics": {
+          "page_name": "search_results_page",
+          "track": true
+        },
+        "flags": {
+          "experimental": false,
+          "hidden": false
+        }
+      },
+      "components": [
+        {
+          "component_id": "title",
+          "component_type": "text",
+          "text": "Please write the search text:",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "search_input",
+          "component_type": "input",
+          "text": "search text",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "search_button",
+          "component_type": "button",
+          "text": "Search",
+          "slot": "header",
+          "actions": {
+            "on_click": {
+              "type": "fetch",
+              "url": "/api/search",
+              "method": "POST",
+              "payload": {
+                "query": "{{search_input}}"
+              }
+            }
+          }
+        },
+        {
+          "component_id": "results_title",
+          "component_type": "text",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "results_list",
+          "component_type": "list",
+          "slot": "content",
+          "action": [
+            "emit:selected_video_id",
+            "navigate:video_page"
+          ]
+        }
+      ]
+    },
+    {
+      "page_id": "video_page",
+      "title": "Video",
+      "layout_type": "grid",
+      "meta": {
+        "seo": {
+          "title": "Video Player",
+          "description": "Watch selected video",
+          "keywords": "video,player,watch"
+        },
+        "auth": {
+          "required": true,
+          "roles": "user,premium"
+        },
+        "layout": {
+          "type": "content",
+          "max_width": "960px",
+          "padding": "0"
+        },
+        "analytics": {
+          "page_name": "video_page",
+          "track": true
+        },
+        "flags": {
+          "experimental": false,
+          "hidden": false
+        }
+      },
+      "components": [
+        {
+          "component_id": "video_title",
+          "component_type": "text",
+          "slot": "header",
+          "action": []
+        },
+        {
+          "component_id": "video_player",
+          "component_type": "video_player",
+          "slot": "content",
+          "action": [
+            "fetch:/api/video"
+          ]
+        }
+      ]
+    }
+  ]
+}

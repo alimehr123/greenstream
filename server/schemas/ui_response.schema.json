@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greenstream/ui-response.schema.json",
+
+  "title": "UI Response Contract",
+  "description": "Final Backend-Driven UI payload consumed by logic-blind renderers",
+
+  "type": "object",
+  "required": ["layout", "state", "actions", "metadata"],
+  "additionalProperties": false,
+
+  "properties": {
+    "layout": {
+      "description": "Layout JSON compliant with the LOCKED Layout Contract",
+      "type": "object"
+    },
+
+    "state": {
+      "description": "Aggregated UI-ready state after applying validated state patches",
+      "type": "object",
+      "additionalProperties": true
+    },
+
+    "actions": {
+      "description": "Action definitions referenced by layout interactions",
+      "type": "object",
+      "additionalProperties": true
+    },
+
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build_id", "generated_at", "contract_version"],
+
+      "properties": {
+        "build_id": {
+          "type": "string",
+          "description": "Backend build or commit identifier"
+        },
+
+        "generated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "UTC timestamp of response generation"
+        },
+
+        "contract_version": {
+          "type": "string",
+          "description": "UI Contract version used to generate this response"
+        },
+
+        "debug": {
+          "type": "object",
+          "description": "Optional debug metadata (excluded in production)",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

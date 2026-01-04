@@ -1,0 +1,4 @@
+=== Summary ===
+
+Checked files: 33
+Violations: 0

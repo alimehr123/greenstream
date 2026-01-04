@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "layout_name": "search_and_player",
+
+  "pages": [
+    {
+      "page_id": "search_page",
+      "title": "Video Search",
+
+      "components": [
+        {
+          "component_id": "search_title",
+          "component_type": "text",
+          "text": "جستجوی ویدیو"
+        },
+        {
+          "component_id": "search_input",
+          "component_type": "input",
+          "placeholder": "عبارت مورد نظر را وارد کنید"
+        },
+        {
+          "component_id": "search_button",
+          "component_type": "button",
+          "label": "Search",
+          "action": {
+            "capability": "data.search",
+            "mode": "patch",
+            "target": "search_results_list",
+            "payload": {
+              "endpoint": "/api/search",
+              "method": "POST",
+              "bind": {
+                "query": "@search_input.value"
+              }
+            }
+          }
+        },
+        {
+          "component_id": "search_results_list",
+          "component_type": "list",
+          "item_action": {
+            "capability": "media.play",
+            "mode": "navigate",
+            "target": "player_page",
+            "payload": {
+              "source": "youtube",
+              "video_id": "@item.video_id"
+            }
+          },
+          "items": []
+        }
+      ]
+    },
+    {
+      "page_id": "player_page",
+      "title": "Video Player",
+
+      "components": [
+        {
+          "component_id": "player_title",
+          "component_type": "text",
+          "text": "@state.video.title"
+        },
+        {
+          "component_id": "video_player",
+          "component_type": "media_player",
+          "source": "youtube",
+          "video_id": "@state.video.video_id"
+        },
+        {
+          "component_id": "back_button",
+          "component_type": "button",
+          "label": "بازگشت",
+          "action": {
+            "capability": "ui.navigate",
+            "mode": "navigate",
+            "target": "search_page"
+          }
+        }
+      ]
+    }
+  ]
+}

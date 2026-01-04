@@ -1,0 +1,108 @@
+GREENSTREAM PROJECT STRUCTURE AUDIT
+========================================
+Root Directory: e:\projects\greenstream
+
+📁 architecture/
+    📄 Backend_Contract.docx
+    📄 Backend_rulebook.docx
+    📄 Layout_Compiler.docx
+    📄 Layout_Contract_.docx
+    📄 achitecure_V1.txt
+    📄 architecture_V2.txt
+    📄 architecture_description.txt
+    📄 layout_schema.json
+📁 archive/
+    📄 layout_editorold_working.py
+    📄 main_old.py
+    📄 run_server_old.bat
+    📄 ui_state_aggregator_old.py
+📄 audit_project_structure.py
+📁 backend_services/
+    📄 __init__.py
+    📁 capabilities/
+        📄 __init__.py
+        📄 play_video.py
+        📄 registry.py
+        📄 search_videos.py
+    📁 capability_dispatcher/
+        📄 __init__.py
+        📄 errors.py
+        📄 executable_dispatcher.py
+    📁 contracts/
+        📄 __init__.py
+        📄 video_contract.py
+    📁 decision_engines/
+    📁 finalization/
+        📄 __init__.py
+        📄 ui_response_finalizer.py
+    📁 integrations/
+        📄 __init__.py
+        📄 context_builder.py
+        📄 user_agent.py
+        📄 youtube_adapter.py
+        📄 youtube_adapter_async.py
+    📁 intents/
+        📄 READ_ME.md
+        📄 __init__.py
+        📄 play_video_intent.py
+    📁 layout_policy/
+        📄 __init__.py
+        📄 ui_layout_resolver.py
+    📁 layout_services/
+        📄 __init__.py
+        📄 editor_save_pipeline.py
+        📄 layout.contract.schema_DEPRECATED.json
+        📄 layout_compiler.py
+        📄 layout_loader.py
+        📄 layout_runtime.py
+    📁 policies/
+    📁 state_aggregation/
+        📄 __init__.py
+        📄 errors.py
+        📁 schemas/
+            📄 __init__.py
+            📄 search_results.py
+            📄 video_player.py
+        📄 state_schema_registry.py
+        📄 ui_state_aggregator.py
+📁 docs/
+📁 frontend/
+📁 packages/
+📁 release/
+📁 server/
+    📄 __init__.py
+    📁 api/
+        📄 search.py
+        📄 ui.py
+        📄 video.py
+    📄 main.py
+    📁 middleware/
+        📄 __init__.py
+        📄 schema_validation.py
+    📄 requirements.txt
+    📄 run_server.bat
+    📁 schemas/
+        📄 __init__.py
+        📄 loader.py
+        📄 ui_request.schema.json
+        📄 ui_response.schema.json
+    📁 utils/
+        📄 network_info.py
+📁 server_manager/
+    📄 __init__.py
+    📁 layout_editor/
+        📄 about.txt
+        📄 layout_editor.py
+        📄 layout_guide.txt
+        📁 layouts/
+            📄 default.layout.json
+            📄 default2.layout.json
+            📄 default3.layout.json
+            📄 guest.layout.json
+            📄 search_and_play.layout.json
+            📄 search_results.layout.json
+            📄 youtube_video_browser.layout.json
+    📄 server_manager.py
+📄 shared_config.py
+📁 tools/
+    📁 architecture_linter/

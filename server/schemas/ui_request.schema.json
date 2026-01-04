@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greenstream/ui-request.schema.json",
+
+  "title": "UI Request Contract",
+  "description": "Contract for requests sent to /api/ui. Describes user intent, parameters, and execution context.",
+
+  "type": "object",
+  "required": ["intent"],
+  "additionalProperties": false,
+
+  "properties": {
+    "intent": {
+      "type": "string",
+      "description": "Intent identifier resolved by the Intent/Capability Registry",
+      "pattern": "^[a-zA-Z0-9_.:-]+$"
+    },
+
+    "params": {
+      "type": "object",
+      "description": "Intent-specific parameters. Validated at Capability level.",
+      "additionalProperties": true
+    },
+
+    "context": {
+      "type": "object",
+      "description": "Execution context provided by caller or middleware",
+      "additionalProperties": false,
+
+      "properties": {
+        "user": {
+          "type": "object",
+          "description": "Authenticated user info (if available)",
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "role": { "type": "string" },
+            "locale": { "type": "string" }
+          }
+        },
+
+        "device": {
+          "type": "object",
+          "description": "Client device info",
+          "additionalProperties": false,
+          "properties": {
+            "platform": { "type": "string" },
+            "os": { "type": "string" },
+            "app_version": { "type": "string" }
+          }
+        },
+
+        "session": {
+          "type": "object",
+          "description": "Session-related metadata",
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "is_authenticated": { "type": "boolean" }
+          }
+        }
+      }
+    },
+
+    "meta": {
+      "type": "object",
+      "description": "Transport-level or client hints, not business logic",
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "identity": {
+    "name": "youtube_video_browser",
+    "version": "1.0.0",
+    "schema_version": "1.0"
+  },
+
+  "policy": {},
+
+  "navigation": {
+    "initial_page": "search"
+  },
+
+  "state": {
+    "app.title": {
+      "owner": "layout",
+      "type": "string",
+      "readonly": true,
+      "initial": "YouTube Video Browser",
+      "lifecycle": {
+        "create": "layout_init",
+        "destroy": "layout_exit"
+      }
+    },
+
+    "videos": {
+      "owner": "page",
+      "page": "search",
+      "type": "array",
+      "lifecycle": {
+        "create": "page_enter",
+        "destroy": "page_exit"
+      }
+    },
+
+    "selected.video": {
+      "owner": "layout",
+      "type": "object",
+      "nullable": true,
+      "lifecycle": {
+        "create": "layout_init",
+        "destroy": "layout_exit"
+      }
+    }
+  },
+
+  "pages": [
+    {
+      "id": "search",
+      "title": "Search Results",
+      "components": [
+        "header_title",
+        "video_list"
+      ]
+    },
+    {
+      "id": "video",
+      "title": "Video Player",
+      "components": [
+        "video_title",
+        "video_player",
+        "open_on_youtube",
+        "back_to_results"
+      ]
+    },
+    {
+      "id": "about",
+      "title": "About",
+      "components": [
+        "about_text",
+        "back_to_results"
+      ]
+    }
+  ],
+
+  "components": {
+    "header_title": {
+      "type": "text",
+      "bind": {
+        "value": "app.title"
+      }
+    },
+
+    "video_list": {
+      "type": "list",
+      "bind": {
+        "items": "videos"
+      },
+      "events": {
+        "select": "open_video"
+      }
+    },
+
+    "video_title": {
+      "type": "text",
+      "bind": {
+        "value": "selected.video.title"
+      }
+    },
+
+    "video_player": {
+      "type": "image",
+      "bind": {
+        "src": "selected.video.embed_url"
+      }
+    },
+
+    "open_on_youtube": {
+      "type": "button",
+      "events": {
+        "click": "open_external_youtube"
+      }
+    },
+
+    "back_to_results": {
+      "type": "button",
+      "events": {
+        "click": "go_back"
+      }
+    },
+
+    "about_text": {
+      "type": "text",
+      "bind": {
+        "value": "selected.video.description"
+      }
+    }
+  },
+
+  "actions": {
+    "open_video": {
+      "intent": "navigate_to_video",
+      "target": "navigation",
+      "params": {
+        "page": "video",
+        "bind_selected_from": "videos"
+      }
+    },
+
+    "open_external_youtube": {
+      "intent": "open_url",
+      "target": "external",
+      "params": {
+        "url": "selected.video.watch_url"
+      }
+    },
+
+    "go_back": {
+      "intent": "navigate",
+      "target": "navigation",
+      "params": {
+        "page": "search"
+      }
+    }
+  },
+
+  "interactions": [
+    {
+      "trigger": "video_list.select",
+      "action": "open_video"
+    },
+    {
+      "trigger": "open_on_youtube.click",
+      "action": "open_external_youtube"
+    }
+  ]
+}

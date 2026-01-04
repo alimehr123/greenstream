@@ -1,0 +1,275 @@
+============================================================
+GreenStream Architecture
+Layout-Agnostic & Capability-Driven UI System
+============================================================
+
+Version: 1.0
+Status: Active (Authoritative)
+Language: English
+
+------------------------------------------------------------
+1. Architecture Goals
+------------------------------------------------------------
+
+The primary goal of this architecture is to enable a fully
+Layout-Agnostic, Capability-Driven UI system where:
+
+- UI layouts are defined ONLY via JSON files.
+- Backend never contains UI logic or layout decisions.
+- Frontend acts as a generic Instruction & Capability Executor.
+- New UI behaviors (video, download, navigation, embeds, etc.)
+  can be enabled ONLY by editing layout JSON files.
+- The system supports Web, Desktop, and future Mobile clients
+  without architectural changes.
+
+------------------------------------------------------------
+2. Core Architectural Principles
+------------------------------------------------------------
+
+1. Layout ≠ UI Implementation
+   Layout files describe intent and structure, NOT DOM,
+   framework code, or platform-specific behavior.
+
+2. Backend Is a Data & Instruction Provider
+   Backend produces data and UI instructions only.
+   It MUST NOT:
+   - Know the UI layout structure
+   - Know rendering details
+   - Know client platform specifics
+
+3. Frontend Is a Capability Execution Engine
+   Frontend receives UI instructions and executes them
+   based on declared capabilities.
+
+4. Capability-Driven Design
+   Every interactive or behavioral feature is expressed as
+   a "capability" with a known semantic meaning.
+
+------------------------------------------------------------
+3. High-Level Flow
+------------------------------------------------------------
+
+Request
+  → Request Context Builder (facts only)
+      → UI Layout Resolver (pure decision)
+          → Layout Loader (JSON)
+              → Layout Compiler
+                  → UI Instruction Response
+                      → Frontend Capability Executor
+                          → Rendered UI
+
+------------------------------------------------------------
+4. Project Structure (Relevant Parts)
+------------------------------------------------------------
+
+/project_root
+│
+├── server/
+│   ├── main.py                 # FastAPI app owner (server entry)
+│   ├── run_server.bat          # Windows helper script to run server
+│   ├── requirements.txt        # Backend Python dependencies
+│   │
+│   ├── api/
+│   │   ├── ui.py               # Main UI layout endpoint (/api/ui/layout)
+│   │   ├── search.py           # Search-related APIs (YouTube search, etc.)
+│   │   └── video.py            # Video-related APIs (video details, player)
+│   │
+│   └── services/
+│       ├── request_context_builder.py   # Builds request context (facts only)
+│       ├── ui_layout_resolver.py         # Pure layout decision logic
+│       ├── layout_service.py             # Loads layout JSON files
+│       ├── layout_compiler.py             # Compiles layout → UI instructions
+│       ├── ui_state_builder.py            # Builds final UI state
+│       ├── user_agent_parser.py           # Parses client / platform info
+│       ├── youtube_service.py             # Sync YouTube service
+│       └── youtube_service_async.py       # Async YouTube service (httpx)
+│
+├── frontend/
+│   ├── ui_web/                 # Web frontend (HTML / JS / CSS)
+│   ├── ui_desktop_app/         # Desktop client (Kivy / PyInstaller)
+│   └── ui_mobile_app/          # (Future) Mobile client
+│
+├── shared_config.py            # Shared configuration (base URLs, ports, etc.)
+├── architecture.txt            # Architecture Single Source of Truth
+├── Read_me_for_build_desktop_offline.txt
+├── build_desktop_offline.bat
+└── requirements.txt            # (Optional / Root-level dependencies)
+
+------------------------------------------------------------
+
+5. UI Instruction Contract (UIC)
+------------------------------------------------------------
+
+Backend responses that affect the UI MUST follow a UI
+Instruction Contract.
+
+Instruction modes:
+
+- replace       → Replace entire UI
+- patch         → Update part of UI
+- reset         → Clear UI state
+- load_layout   → Load a new layout definition
+
+Example:
+{
+  "mode": "patch",
+  "pages": [...]
+}
+
+------------------------------------------------------------
+6. Capability System (Core of the Architecture)
+------------------------------------------------------------
+
+A capability represents an official, recognized UI behavior.
+Layouts declare capabilities; frontends execute them.
+
+Capabilities MUST be:
+- Declarative
+- Platform-agnostic
+- Extensible
+- Backward-compatible
+
+------------------------------------------------------------
+7. Official Capability Map (v1.0)
+------------------------------------------------------------
+
+### A. Content & Media Capabilities
+
+1. content.display
+   Purpose: Display text or rich content.
+   Types: text, html, markdown
+
+2. media.play
+   Purpose: Play media (video/audio/image).
+   Providers: youtube, vimeo, http, local, cdn
+
+3. embed.external
+   Purpose: Embed third-party content (iframe, widget).
+
+------------------------------------------------------------
+
+### B. Navigation Capabilities
+
+4. navigation.open
+   Purpose: Open external links.
+   Schemes: https, http, mailto, tel
+
+5. navigation.internal
+   Purpose: Navigate inside UI engine.
+   Modes: replace, patch, reset, load_layout
+
+------------------------------------------------------------
+
+### C. Data & Action Capabilities
+
+6. action.api
+   Purpose: Call backend APIs.
+   Supports binding UI state to request payload.
+
+7. file.download
+   Purpose: Download files from any source.
+   Providers: http, github, s3, local
+
+8. file.upload
+   Purpose: Upload files to backend.
+
+------------------------------------------------------------
+
+### D. State & UX Control Capabilities
+
+9. state.update
+   Purpose: Mutate UI state without backend interaction.
+
+10. ui.visibility
+    Purpose: Control component lifecycle.
+    Actions: show, hide, destroy
+
+------------------------------------------------------------
+
+### E. Future Escape Hatch
+
+11. custom
+    Purpose: Future or platform-specific behaviors.
+    Rule: Unknown custom capabilities must NOT crash the system.
+
+------------------------------------------------------------
+8. Capability Declaration Example (Layout JSON)
+------------------------------------------------------------
+
+{
+  "component_type": "button",
+  "label": "Download File",
+  "action": {
+    "capability": "file.download",
+    "source": {
+      "provider": "http",
+      "url": "https://example.com/file.zip"
+    }
+  }
+}
+
+------------------------------------------------------------
+9. Backend Responsibilities
+------------------------------------------------------------
+
+The Backend MUST:
+
+- Accept capability-based layouts
+- Return UI instructions following UIC
+- Implement server-side parts of capabilities (if needed)
+- Remain layout-agnostic
+
+The Backend MUST NOT:
+
+- Reference DOM or UI framework code
+- Hardcode UI behavior
+- Depend on frontend implementation details
+
+------------------------------------------------------------
+10. Frontend Responsibilities
+------------------------------------------------------------
+
+The Frontend MUST:
+
+- Maintain a Capability Handler Registry
+- Gracefully ignore unknown capabilities
+- Execute known capabilities per platform rules
+- Remain generic and reusable
+
+Example (conceptual):
+
+capabilityHandlers = {
+  "media.play": playMedia,
+  "file.download": downloadFile,
+  "navigation.open": openLink,
+  ...
+}
+
+------------------------------------------------------------
+11. Backward & Forward Compatibility Rules
+------------------------------------------------------------
+
+- Old layouts must continue to work.
+- New capabilities must not break old clients.
+- Unknown fields must be ignored, not rejected.
+- Schema evolution must be additive.
+
+------------------------------------------------------------
+12. Final Architectural Statement
+------------------------------------------------------------
+
+GreenStream UI is a fully Layout-Agnostic,
+Capability-Driven system.
+
+With this architecture:
+- UI evolution requires zero backend refactors
+- New behaviors are enabled through layout JSON only
+- The frontend operates as an instruction executor
+- The backend remains a clean, future-proof data provider
+
+This document is the single authoritative reference
+for architectural decisions in this project.
+
+============================================================
+END OF FILE
+============================================================

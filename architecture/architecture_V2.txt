@@ -1,0 +1,255 @@
+GreenStream Architecture V2.0: Contract-Driven, Backend-Driven UI
+
+1. Introduction and Architectural Shift
+
+GreenStream Architecture V2.0 mandates a strict Contract-Driven, Backend-Driven UI paradigm. This shift centralizes all presentation logic and data shaping on the server side, treating the UI layer strictly as a renderer for declarative contracts. The primary goal is to decouple the client presentation from backend data manipulation, ensuring consistency, simplified iteration, and robust state management across potentially heterogeneous clients.
+
+All communication between the backend services and the UI rendering engine is governed by strictly defined, versioned JSON contracts.
+
+2. Core Contract Definitions
+
+The foundation of V2.0 lies in three primary, version-enforced contracts: Layout, Request, and Response.
+
+2.1. Layout Contract (LOCKED)
+
+The Layout Contract (LayoutContract) defines the static structure of the UI component tree. It is the single source of truth for what should be rendered.
+
+Key Principles:
+
+
+
+
+
+Declarative Only: The contract must contain zero execution logic, no derived state calculations, and no client-side decision points.
+
+
+
+Renderer Logic-Blind: The renderer must only interpret the structure defined by the contract (e.g., render a button if the type is "Button"). It must not know why a component is rendered or how its data was derived.
+
+
+
+State Ownership and Lifecycle: The contract specifies where state placeholders exist (binding points), but the actual state management and lifecycle events (mounting, unmounting) are owned and managed by the backend Orchestrator, reflected in the UI Response Contract.
+
+Structure Snippet Example:
+
+{
+  "contract_type": "LayoutContract",
+  "contract_version": "1.0",
+  "layout_id": "user_profile_v3",
+  "components": [
+    {
+      "component_id": "C101",
+      "type": "Container",
+      "props": { "orientation": "vertical" },
+      "children": [
+        {
+          "component_id": "C102",
+          "type": "TextLabel",
+          "bindings": {
+            "content": "$state.profile.name" // Binds to state path
+          }
+        }
+        // ... more components
+      ]
+    }
+  ]
+}
+
+
+2.2. UI Request Contract
+
+The UI Request Contract governs all input initiated by the client (user interaction, lifecycle events). It is intent-driven.
+
+Key Principles:
+
+
+
+
+
+Intent-Driven Input: Requests communicate what the user wants to achieve (the intent), not how the UI should update itself.
+
+
+
+Params/Context Separation: Input data (params) must be strictly separated from request metadata (context), such as session tokens or correlation IDs.
+
+
+
+Fast-Fail Validation: All requests must pass initial schema validation immediately upon arrival at the API gateway. Any validation failure results in an immediate, structured error response without engaging core services.
+
+Structure Snippet Example:
+
+{
+  "contract_type": "UIRequestContract",
+  "contract_version": "2.0",
+  "intent": "USER_UPDATE_EMAIL",
+  "context": {
+    "session_id": "XYZ123",
+    "client_version": "iOS-4.5.1"
+  },
+  "params": {
+    "new_email": "new.address@example.com"
+  }
+}
+
+
+2.3. UI Response Contract (Contract-Driven Response Model)
+
+The UI Response Contract is the unified output package sent from the backend to drive the UI render cycle. It replaces the deprecated UI Instruction Contract (UIC).
+
+Key Principles:
+
+
+
+
+
+Aggregation: It combines necessary rendering instructions, current state, and available future actions in a single payload.
+
+
+
+Contract Version Enforcement: The response must specify the contract_version expected by the layout used. The renderer will refuse to process responses with mismatched major versions.
+
+
+
+State Patch Model Integration: State updates are delivered via a patch mechanism relative to the previous known state (see Section 3).
+
+Structure Snippet Example:
+
+{
+  "contract_type": "UIResponseContract",
+  "contract_version": "2.0",
+  "layout_reference": "user_profile_v3", // Links to the required LayoutContract
+  "metadata": {
+    "transaction_id": "T98765",
+    "timestamp": "2024-01-01T10:00:00Z"
+  },
+  "state_patch": {
+    "op": "replace",
+    "path": "/profile/email",
+    "value": "updated.email@example.com"
+  },
+  "actions": [
+    {
+      "action_id": "A001",
+      "type": "NAVIGATE",
+      "target": "/dashboard",
+      "visibility": "ALWAYS"
+    }
+  ],
+  "aggregated_state": {
+    // Complete, normalized state payload (used for initial load or full refresh)
+    "profile": { "name": "Jane Doe", "email": "..." }
+  }
+}
+
+
+3. State Management Layer
+
+State management is strictly server-owned and managed via the Orchestrator.
+
+3.1. State Schema Registry
+
+The State Schema Registry is the authoritative repository defining the exact JSON schema structure for all application state segments. Every piece of state managed by the Orchestrator must conform to a registered schema. This ensures data type integrity and predictable structure for both state retrieval and patching.
+
+3.2. State Patch Model
+
+Updates to the client's rendered state are delivered using a delta mechanism based on JSON Patch (RFC 6902) conventions, adapted for the StatePatch object within the Response Contract.
+
+The Orchestrator calculates the minimal necessary difference between the client's last known state and the new state, delivering only the patch. The client renderer applies this patch atomically to its local state representation before re-rendering based on the Layout Contract.
+
+For complex or high-frequency updates where patching is inefficient, the Orchestrator may elect to send the full aggregated_state payload instead, but this must be explicitly signaled or follow defined refresh policies.
+
+4. Backend Processing Roles
+
+The backend environment is decomposed into distinct, single-responsibility roles responsible for processing requests and generating responses.
+
+4.1. Capability Registry
+
+The Capability Registry maps incoming intent strings (from the UI Request Contract) to the specific microservices or functions capable of fulfilling that intent. It acts as a centralized routing table for business logic execution.
+
+4.2. Dispatcher
+
+The Dispatcher receives the validated UI Request Contract. Its role is to consult the Capability Registry, retrieve the necessary logic handlers (services), and invoke them sequentially or in parallel, based on the required workflow for the specified intent. It manages the flow of initial request data into the business layer.
+
+4.3. Aggregator
+
+The Aggregator receives results from the executed services. Its crucial function is to transform raw service outputs into the structured format required by the Response Contract. This involves:
+
+
+
+
+
+Calculating the necessary state changes based on the service output.
+
+
+
+Determining the required Layout Contract version.
+
+
+
+Generating the final aggregated_state (or the corresponding state_patch).
+
+
+
+Identifying available downstream actions.
+
+4.4. Finalizer
+
+The Finalizer takes the aggregated data and assembles the final, cohesive UI Response Contract. It ensures all contract versioning, metadata, and validation checks on the output are complete before transmission.
+
+5. The Orchestrator Role ()
+
+The Orchestrator layer, typically implemented within the main API endpoint handler (e.g., server/api/ui.py), acts as the gatekeeper and coordinator, enforcing strict separation of concerns.
+
+Strict Non-Decision Guarantees:
+
+The Orchestrator must exhibit strict non-decision guarantees regarding presentation logic. Its responsibilities are procedural:
+
+
+
+
+
+Receive Request.
+
+
+
+Apply Fast-Fail Schema Validation middleware to the Request Contract.
+
+
+
+Pass the validated contract to the Dispatcher.
+
+
+
+Receive the assembled Response Contract from the Finalizer.
+
+
+
+Apply Fast-Fail Schema Validation middleware to the Response Contract (ensuring structure integrity).
+
+
+
+Transmit the Response Contract.
+
+The Orchestrator must not contain logic to determine which components to render, how state is computed, or which actions are enabled based on business rules—these decisions belong entirely to the service logic feeding the Aggregator.
+
+6. Middleware and Validation
+
+Robust, layered validation is mandatory across the boundary.
+
+6.1. Fast-Fail Schema Validation Middleware (Request/Response)
+
+Dedicated middleware must intercept all incoming requests and outgoing responses.
+
+
+
+
+
+Request Validation: Checks incoming payloads against the registered UIRequestContract schema. Failure triggers an HTTP 400 error response immediately, bypassing the Dispatcher.
+
+
+
+Response Validation: Checks outgoing payloads against the registered UIResponseContract schema. Failure indicates an internal server error (e.g., misconfigured Aggregator) and triggers an HTTP 500 response. This guarantees that the client always receives a structurally sound contract, even if the content is an error message.
+
+
+
+End of Document: GreenStream Architecture V2.0

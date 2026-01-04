@@ -1,0 +1,42 @@
+LAYOUT GUIDE – Server Driven UI (BDUUI)
+
+1. What is a Layout?
+A layout defines the structural arrangement of pages and components
+that the backend sends to the frontend renderer.
+
+2. Layout Identity
+Each layout must have:
+- layout_name (unique, uppercase recommended)
+- version (integer)
+- meta.author
+- meta.description
+
+3. Pages
+A layout can contain one or more pages.
+Each page has:
+- page_id
+- title
+- layout_type (grid, vertical, horizontal)
+
+4. Components
+Components must be one of the allowed renderer types:
+search_box, video_list, video_card, player,
+text, image, button, tabs, list, container, spacer
+
+Each component must have:
+- component_id
+- component_type
+- slot (optional)
+- action (optional)
+
+5. No Logic Rule
+Layouts do not include conditions, loops or business rules.
+All logic is handled by the backend context resolver.
+
+6. Fallback Behavior
+If a requested layout is not found, the backend will load
+the default layout and include a warning in page title.
+
+7. File Format
+Layouts are stored as JSON files with extension:
+*.layout.json

@@ -1,0 +1,3 @@
+=== Semantic Architecture Import Violations ===
+
+✅ No semantic violations found.

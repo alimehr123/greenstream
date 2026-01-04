@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "layout_name": "search_results",
+
+  "pages": [
+    {
+      "page_id": "search_page",
+      "title": "Video Search",
+
+      "components": [
+        {
+          "component_id": "search_title",
+          "component_type": "text",
+          "text": "جستجوی ویدیو"
+        },
+
+        {
+          "component_id": "search_input",
+          "component_type": "input",
+          "placeholder": "عبارت مورد نظر را وارد کنید"
+        },
+
+        {
+          "component_id": "search_button",
+          "component_type": "button",
+          "label": "Search",
+
+          "action": {
+            "capability": "data.search",
+            "mode": "patch",
+            "target": "search_results_list",
+            "payload": {
+              "endpoint": "/api/search",
+              "method": "POST",
+              "bind": {
+                "query": "@search_input.value"
+              }
+            }
+          }
+        },
+
+        {
+          "component_id": "search_results_list",
+          "component_type": "list",
+          "items": []
+        }
+      ]
+    }
+  ]
+}

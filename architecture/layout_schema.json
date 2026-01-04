@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GreenStream UI Layout Schema",
+  "type": "object",
+
+  "required": ["schema_version", "layout_name", "pages"],
+
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Layout schema version"
+    },
+
+    "layout_name": {
+      "type": "string",
+      "description": "Logical layout identifier"
+    },
+
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/page" }
+    }
+  },
+
+  "definitions": {
+    "page": {
+      "type": "object",
+      "required": ["page_id", "components"],
+      "properties": {
+        "page_id": { "type": "string" },
+        "title": { "type": "string" },
+
+        "components": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/component" }
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "component": {
+      "type": "object",
+      "required": ["component_id", "component_type"],
+      "properties": {
+        "component_id": { "type": "string" },
+        "component_type": { "type": "string" },
+
+        "label": { "type": "string" },
+        "text": { "type": "string" },
+        "placeholder": { "type": "string" },
+
+        "items": {
+          "type": "array",
+          "items": {}
+        },
+
+        "action": { "$ref": "#/definitions/action" }
+      },
+      "additionalProperties": true
+    },
+
+    "action": {
+      "type": "object",
+      "required": ["capability"],
+      "properties": {
+        "capability": {
+          "type": "string",
+          "description": "Capability identifier (e.g. media.play, file.download)"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "patch",
+            "replace",
+            "reset",
+            "load_layout",
+            "navigate"
+          ]
+        },
+        "target": { "type": "string" },
+        "payload": { "type": "object" }
+      },
+      "additionalProperties": true
+    }
+  },
+
+  "additionalProperties": true
+}

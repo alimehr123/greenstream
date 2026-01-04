@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenStream UI</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .component {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+        }
+        .header {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+            cursor: pointer;
+        }
+        .list-item:hover {
+            background-color: #f7f7f7;
+        }
+        .thumbnail {
+            width: 160px;
+            height: 90px;
+            margin-right: 15px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .item-title {
+            font-weight: 600;
+        }
+        .action-button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="ui-root">
+    <div class="header">GreenStream UI</div>
+    <p>Loading UI...</p>
+</div>
+
+<script>
+
+let CURRENT_LAYOUT = null;
+
+/* ======================================================
+   Core Globals
+====================================================== */
+
+const UI_ROOT = document.getElementById('ui-root');
+
+/* ======================================================
+   Meta
+====================================================== */
+
+function applyMeta(meta) {
+    if (!meta) return;
+    if (meta.seo?.title) document.title = meta.seo.title;
+}
+
+/* ======================================================
+   UI Context (Layout‑Agnostic)
+====================================================== */
+
+const UIContext = {
+    state: {},
+
+    getValue(ref) {
+        if (!ref || typeof ref !== 'string') return ref;
+
+        // @state.x.y
+        if (ref.startsWith('@state.')) {
+            const path = ref.replace('@state.', '').split('.');
+            let val = this.state;
+            for (const p of path) {
+                val = val?.[p];
+            }
+            return val;
+        }
+
+        // @input_id.value
+        if (ref.startsWith('@')) {
+            const [id, prop] = ref.slice(1).split('.');
+            const el = document.getElementById(`${id}-field`);
+            if (!el) return null;
+            if (prop === 'value') return el.value;
+        }
+        return null;
+    },
+
+    navigate(pageId) {
+        const page = CURRENT_LAYOUT.pages.find(p => p.page_id === pageId);
+        if (!page) {
+            console.warn("Page not found:", pageId);
+            return;
+        }
+        renderUI(page);
+    }
+};
+
+
+/* ======================================================
+   Capability Registry
+====================================================== */
+
+const CapabilityRegistry = {
+    registry: {},
+
+    register(name, executor) {
+        this.registry[name] = executor;
+    },
+
+    get(name) {
+        return this.registry[name];
+    }
+};
+
+/* ======================================================
+   Generic Action Dispatcher
+====================================================== */
+
+async function dispatchAction(action) {
+    if (!action || !action.capability) {
+        console.warn("Invalid action:", action);
+        return;
+    }
+
+    const executor = CapabilityRegistry.get(action.capability);
+    if (!executor) {
+        console.warn(`No executor for capability: ${action.capability}`);
+        return;
+    }
+
+    try {
+        const instruction = await executor.execute(action, UIContext);
+        applyUIInstruction(instruction);
+    } catch (err) {
+        UI_ROOT.innerHTML =
+            `<div class="component">Error: ${err.message}</div>`;
+    }
+}
+
+/* ======================================================
+   Capability Executors
+====================================================== */
+
+/**
+ * Generic data request capability
+ * Backend MUST return full UIC
+ */
+CapabilityRegistry.register("data.request", {
+    async execute(action, ctx) {
+        const bind = action.payload?.bind || {};
+        const requestPayload = {};
+
+        for (const key in bind) {
+            requestPayload[key] = ctx.getValue(bind[key]);
+        }
+
+        const res = await fetch(action.payload.endpoint, {
+            method: action.payload.method || "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestPayload)
+        });
+
+        // ✅ backend returns UIC directly
+        const instruction = await res.json();
+        return instruction;
+    }
+});
+
+/**
+ * Alias: data.search → data.request
+ */
+CapabilityRegistry.register(
+    "data.search",
+    CapabilityRegistry.get("data.request")
+);
+CapabilityRegistry.register("media.play", {
+    async execute(action, ctx) {
+        const payload = action.payload || {};
+
+        // ✅ bind values (e.g. @item.video_id)
+        ctx.state.video = {
+            video_id: payload.video_id,
+            title: payload.title || ""
+        };
+
+        if (action.mode === "navigate") {
+            ctx.navigate(action.target);
+        }
+
+        // media.play خودش UIC برنمی‌گرداند
+        return null;
+    }
+});
+
+/* ======================================================
+   UI Instruction Interpreter (UIC Runtime)
+====================================================== */
+
+function applyUIInstruction(instr) {
+    if (!instr || !instr.mode) {
+        console.warn("Invalid UI instruction:", instr);
+        return;
+    }
+
+    console.log("🧠 APPLY UIC:", instr);
+
+    switch (instr.mode) {
+
+        case "replace":
+            if (instr.payload?.pages) {
+                renderUI(instr.payload.pages[0]);
+            } else if (instr.payload?.render_tree) {
+                renderUI(instr.payload);
+            }
+            break;
+
+        case "patch":
+            applyPatch(instr.target, instr.payload);
+            break;
+
+        case "reset":
+        case "load_layout":
+            bootstrap();
+            break;
+
+        default:
+            console.warn("Unknown UI mode:", instr.mode);
+    }
+}
+
+/* ======================================================
+   Patch Engine (Layout‑Agnostic)
+====================================================== */
+
+function applyPatch(targetId, payload) {
+    const target = document.getElementById(targetId);
+    if (!target) {
+        console.warn("Patch target not found:", targetId);
+        return;
+    }
+
+    target.innerHTML = '';
+
+    // ✅ Patch render_tree
+    if (payload.render_tree?.components) {
+        payload.render_tree.components.forEach(c => {
+            const r = RENDERERS[c.component_type];
+            if (r) target.appendChild(r(c));
+        });
+        return;
+    }
+
+    // ✅ Patch list items
+    if (Array.isArray(payload.items)) {
+        payload.items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.title || String(item);
+            target.appendChild(li);
+        });
+    }
+}
+
+/* ======================================================
+   Renderers
+====================================================== */
+
+function renderText(c) {
+    const el = document.createElement('div');
+    el.className = 'component';
+    el.textContent = c.text;
+    return el;
+}
+
+function renderInput(c) {
+    const el = document.createElement('div');
+    el.className = 'component';
+
+    const input = document.createElement('input');
+    input.id = c.component_id + '-field';
+    input.placeholder = c.placeholder || '';
+    el.appendChild(input);
+
+    return el;
+}
+
+function renderButton(c) {
+    const el = document.createElement('div');
+    el.className = 'component';
+
+    const btn = document.createElement('button');
+    btn.className = 'action-button';
+    btn.textContent = c.label || c.text || 'Action';
+
+    btn.onclick = () => dispatchAction(c.action);
+
+    el.appendChild(btn);
+    return el;
+}
+
+function renderList(c) {
+    const ul = document.createElement('ul');
+    ul.id = c.component_id;
+    ul.className = 'component';
+    ul.style.listStyle = 'none';
+    ul.style.padding = '0';
+
+    const items = c.items || [];
+
+    if (items.length === 0) {
+        const empty = document.createElement('li');
+        empty.textContent = c.empty_text || 'No items';
+        ul.appendChild(empty);
+        return ul;
+    }
+
+    items.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'list-item';
+
+        // ✅ ACTION from component (item_action)
+        if (c.item_action) {
+            li.onclick = () => {
+                const action = JSON.parse(JSON.stringify(c.item_action));
+
+                // ✅ resolve @item.*
+                if (action.payload) {
+                    Object.keys(action.payload).forEach(k => {
+                        if (
+                            typeof action.payload[k] === 'string' &&
+                            action.payload[k].startsWith('@item.')
+                        ) {
+                            const field = action.payload[k].replace('@item.', '');
+                            action.payload[k] = item[field];
+                        }
+                    });
+                }
+
+                dispatchAction(action);
+            };
+        }
+
+        if (item.thumbnail) {
+            const img = document.createElement('img');
+            img.className = 'thumbnail';
+            img.src = item.thumbnail;
+            li.appendChild(img);
+        }
+
+        const title = document.createElement('div');
+        title.className = 'item-title';
+        title.textContent = item.title || String(item);
+        li.appendChild(title);
+
+        ul.appendChild(li);
+    });
+
+    return ul;
+}
+
+function renderIframe(c) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'component';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = c.src;
+    iframe.width = c.width || '100%';
+    iframe.height = c.height || '420';
+    iframe.allowFullscreen = true;
+    iframe.style.border = 'none';
+
+    wrapper.appendChild(iframe);
+    return wrapper;
+}
+
+const RENDERERS = {
+    text: renderText,
+    input: renderInput,
+    button: renderButton,
+    list: renderList,
+    iframe: renderIframe
+};
+
+/* ======================================================
+   Main
+====================================================== */
+
+function renderUI(page) {
+    UI_ROOT.innerHTML = '';
+    applyMeta(page.meta);
+
+    page.components.forEach(c => {
+        const r = RENDERERS[c.component_type];
+        if (r) {
+            UI_ROOT.appendChild(r(c));
+        } else {
+            console.warn("Unknown component:", c.component_type);
+        }
+    });
+}
+
+function bootstrap() {
+    fetch('/api/ui/layout')
+        .then(r => r.json())
+        .then(data => {
+            CURRENT_LAYOUT = data;
+            renderUI(data.pages[0]);
+        })
+        .catch(err => {
+            UI_ROOT.innerHTML =
+                `<div class="component">FATAL ERROR: ${err.message}</div>`;
+        });
+}
+
+
+document.addEventListener('DOMContentLoaded', bootstrap);
+</script>
+
+</body>
+</html>
